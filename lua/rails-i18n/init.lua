@@ -53,7 +53,19 @@ local function extract_translation_key()
 	local start_pos = 1
 	while true do
 		-- Find next t('...' or t("..." pattern
-		local s, e, key = line:find([[t%(["'](.-)["']%)]], start_pos)
+		-- local s, e, key = line:find([[t%(["']([^"',]+)["'][^)]*%)]], start_pos)
+		-- Try symbol syntax first (t :key)
+		local s, e, key = line:find([[t%s*:([%w_%.]+)]], start_pos)
+
+		if not s then
+			-- Try quoted string without parentheses (t 'key' or t "key")
+			s, e, key = line:find([[t%s*["']([^"']+)["']], start_pos)
+		end
+
+		if not s then
+			-- Try quoted string with parentheses (t('key') or t("key"))
+			s, e, key = line:find([[t%s*%(["']([^"']+)["'][^)]*%)]], start_pos)
+		end
 		if not s then
 			break
 		end
