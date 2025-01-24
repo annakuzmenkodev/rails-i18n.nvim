@@ -27,17 +27,51 @@ local function find_rails_root()
 	return nil
 end
 
+-- Get current controller action
+local function get_controller_action()
+	local line_num = vim.api.nvim_win_get_cursor(0)[1]
+	local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+
+	-- Search upwards from current position for action definition
+	for i = line_num, 1, -1 do
+		local line = lines[i]
+		local action = line:match("^%s*def%s+([%w_]+)")
+		if action then
+			return action
+		end
+	end
+	return nil
+end
+
 -- Get current file's translation scope
 local function get_current_scope()
 	local file_path = vim.api.nvim_buf_get_name(0)
 	local scope
 
-	-- Handle views
+	-- Handle controllers
+	local controllers_prefix = "/app/controllers/"
+	local controller_index = file_path:find(controllers_prefix)
+	if controller_index then
+		local rel_path = file_path:sub(controller_index + #controllers_prefix)
+		-- Remove _controller.rb suffix and convert to dot notation
+		rel_path = rel_path:gsub("_controller%.rb$", "")
+		rel_path = rel_path:gsub("/", ".")
+
+		local action = get_controller_action()
+		if action then
+			scope = rel_path .. "." .. action
+		end
+		return scope
+	end
+
+	-- Handle views (including partials)
 	local views_prefix = "/app/views/"
 	local view_index = file_path:find(views_prefix)
 	if view_index then
 		local rel_path = file_path:sub(view_index + #views_prefix)
 		rel_path = rel_path:gsub("%..+$", "") -- Remove extensions
+		-- Handle partials (files starting with underscore)
+		rel_path = rel_path:gsub("/_", "/"):gsub("^_", "") -- Remove underscore from partial names
 		rel_path = rel_path:gsub("/", ".") -- Convert path to dot notation
 		scope = rel_path
 	end
@@ -52,14 +86,13 @@ local function extract_translation_key()
 
 	local start_pos = 1
 	while true do
-		-- Find next t('...' or t("..." pattern
-		-- local s, e, key = line:find([[t%(["']([^"',]+)["'][^)]*%)]], start_pos)
 		-- Try symbol syntax first (t :key)
 		local s, e, key = line:find([[t%s*:([%w_%.]+)]], start_pos)
 
 		if not s then
 			-- Try quoted string without parentheses (t 'key' or t "key")
-			s, e, key = line:find([[t%s*["']([^"']+)["']], start_pos)
+			-- s, e, key = line:find([[t%s*["']([^"']+)["']], start_pos)
+			s, e, key = line:find([[t%s*['"]([^"']+)(["'])]], start_pos)
 		end
 
 		if not s then
