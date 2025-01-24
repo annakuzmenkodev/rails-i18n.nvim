@@ -1,0 +1,65 @@
+*rails-i18n.txt*  Rails i18n navigation and management
+
+Author:  Anna Kuzmenko
+For Neovim >= 0.8.0
+
+==============================================================================
+CONTENTS                                                    *rails-i18n-contents*
+
+    1. Introduction ........................... |rails-i18n-introduction|
+    2. Requirements ........................... |rails-i18n-requirements|
+    3. Usage ................................. |rails-i18n-usage|
+    4. Configuration ......................... |rails-i18n-configuration|
+    5. Commands .............................. |rails-i18n-commands|
+
+==============================================================================
+1. INTRODUCTION                                         *rails-i18n-introduction*
+
+rails-i18n.nvim is a Neovim plugin that provides seamless navigation and
+management of Rails i18n translations. It allows you to quickly jump to
+translation definitions in your YAML files and create new translations on the fly.
+
+==============================================================================
+2. REQUIREMENTS                                         *rails-i18n-requirements*
+
+- Neovim >= 0.8.0
+- Rails project with standard i18n structure
+
+==============================================================================
+3. USAGE                                                      *rails-i18n-usage*
+
+Position your cursor on a Rails translation key (e.g., t('user.name')) and use
+the provided command to jump to its definition. If the translation doesn't exist,
+the plugin will offer to create it in the appropriate locale file.
+
+The plugin automatically detects the current scope based on your file location,
+making it particularly useful when working with view templates.
+
+Example: >
+    # In a view file
+    <%= t('.welcome') %>
+    # Will look for the translation under the current view's scope
+<
+
+==============================================================================
+4. CONFIGURATION                                     *rails-i18n-configuration*
+
+Default configuration: >
+    {
+        locales_path = "config/locales",
+        default_locale = "en",
+        rails_roots = { "app", "config", "lib" },
+        default_value = "TODO"
+    }
+<
+
+==============================================================================
+5. COMMANDS                                               *rails-i18n-commands*
+
+                                                                    *:I18nGoto*
+:I18nGoto
+    Jump to the translation definition under the cursor. If the translation
+    doesn't exist, prompts to create it in the appropriate locale file.
+
+==============================================================================
+vim:ft=help:tw=78:ts=8:noet:fen:fdl=0:fdm=marker:
